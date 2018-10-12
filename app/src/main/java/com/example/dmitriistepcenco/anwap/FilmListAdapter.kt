@@ -6,7 +6,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
+import android.widget.ImageView
 import android.widget.TextView
+import com.squareup.picasso.Picasso
 
 
 /**
@@ -14,7 +16,10 @@ import android.widget.TextView
  *@created 11 October 2018
  **/
 
-class FilmListAdapter(private val filmNames:List<String>, private val urls: ArrayList<String>, private val activity: Activity) : BaseAdapter(){
+class FilmListAdapter(private val filmNames: List<String>,
+                      private val description: ArrayList<String>,
+                      private val activity: Activity,
+                      private val images: ArrayList<String>) : BaseAdapter() {
     override fun getView(position: Int, child: View?, parent: ViewGroup): View? {
         var childView = child
         val layoutInflater: LayoutInflater
@@ -26,8 +31,9 @@ class FilmListAdapter(private val filmNames:List<String>, private val urls: Arra
 
             holder = Holder()
             holder.filmName = childView.findViewById(R.id.filmName)
-            holder.url = childView.findViewById(R.id.url)
+            holder.url = childView.findViewById(R.id.description)
             holder.id = childView.findViewById(R.id.id)
+            holder.image = childView.findViewById(R.id.imageView)
             childView.tag = holder
 
         } else holder = childView.tag as Holder
@@ -35,15 +41,11 @@ class FilmListAdapter(private val filmNames:List<String>, private val urls: Arra
 
         holder.id.text = (position + 1).toString()
         holder.filmName.text = filmNames[position]
-        holder.url.text = urls[position]
+        holder.url.text = description[position]
+        Picasso.with(activity).load(images[position]).into(holder.image)
         return childView
     }
 
-    inner class Holder {
-        lateinit var id: TextView
-        lateinit var filmName: TextView
-        lateinit var url: TextView
-    }
 
     override fun getItem(p0: Int): Any? {
         return null
@@ -55,5 +57,12 @@ class FilmListAdapter(private val filmNames:List<String>, private val urls: Arra
 
     override fun getCount(): Int {
         return filmNames.size
+    }
+
+    inner class Holder {
+        lateinit var id: TextView
+        lateinit var filmName: TextView
+        lateinit var url: TextView
+        lateinit var image: ImageView
     }
 }

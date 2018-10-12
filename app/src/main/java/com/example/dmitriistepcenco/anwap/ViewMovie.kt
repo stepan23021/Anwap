@@ -1,46 +1,61 @@
 package com.example.dmitriistepcenco.anwap
 
+import android.app.ProgressDialog
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.support.v4.media.session.MediaControllerCompat
-import android.support.v4.media.session.MediaSessionCompat
-import android.support.v4.media.session.PlaybackStateCompat
 import kotlinx.android.synthetic.main.activity_view_movie.*
+import android.graphics.PixelFormat
+import android.net.Uri
+import android.widget.MediaController
+
 
 class ViewMovie : AppCompatActivity() {
+    private val progressDialog: ProgressDialog? = null
+    private var videoPath: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_view_movie)
-        movieUrl.text = intent.getStringExtra("url")
+        videoPath = intent.getStringExtra("url")
+        movieName.text = intent.getStringExtra("movieName")
+        ViewMovie.progressDialog = ProgressDialog.show(this, "Загрузка", "Buffering video...", true)
+        ViewMovie.progressDialog!!.setCancelable(false)
+
+
+        viewMovie()
     }
-//    private lateinit var mMediaSession: MediaSessionCompat
-//
-//    public override fun onCreate(savedInstanceState: Bundle?) {
-//        super.onCreate(savedInstanceState)
-//
-//        // Create a MediaSessionCompat
-//        mMediaSession = MediaSessionCompat(this, LOG_TAG).apply {
-//
-//            // Enable callbacks from MediaButtons and TransportControls
-//            setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS or
-//                    MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS)
-//
-//            // Do not let MediaButtons restart the player when the app is not visible
-//            setMediaButtonReceiver(null)
-//
-//            // Set an initial PlaybackState with ACTION_PLAY, so media buttons can start the player
-//            val stateBuilder = PlaybackStateCompat.Builder()
-//                    .setActions(PlaybackStateCompat.ACTION_PLAY or PlaybackStateCompat.ACTION_PLAY_PAUSE)
-//            setPlaybackState(stateBuilder.build())
-//
-//            // MySessionCallback has methods that handle callbacks from a media controller
-//            setCallback(MySessionCallback())
-//        }
-//
-//        // Create a MediaControllerCompat
-//        MediaControllerCompat(this, mMediaSession).also { mediaController ->
-//            MediaControllerCompat.setMediaController(this, mediaController)
-//        }
-//    }
+
+    private fun viewMovie() {
+        try {
+            window.setFormat(PixelFormat.TRANSLUCENT)
+            val mediaController = MediaController(this)
+            mediaController.setAnchorView(videoView)
+
+            val video = Uri.parse(videoPath)
+            videoView?.setMediaController(mediaController)
+            videoView?.setVideoURI(video)
+            videoView?.requestFocus()
+            videoView?.setOnPreparedListener {
+                ViewMovie.progressDialog?.dismiss()
+                videoView!!.start()
+            }
+
+
+        } catch (e: Exception) {
+            progressDialog!!.dismiss()
+            println("Video Play Error :" + e.toString())
+            finish()
+        }
+
+    }
+
+    companion object {
+
+        internal var progressDialog: ProgressDialog? = null
+    }
+
 }
+
+
+
+
