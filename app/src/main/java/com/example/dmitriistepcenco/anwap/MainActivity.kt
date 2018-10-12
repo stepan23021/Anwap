@@ -12,15 +12,16 @@ import android.os.AsyncTask
 import android.util.Log
 import android.widget.AdapterView
 import kotlinx.android.synthetic.main.content_main.*
-import org.jsoup.Connection
 import org.jsoup.select.Elements
 import java.lang.Exception
+import java.net.URL
+import java.net.HttpURLConnection
 
 
 private var document: Element? = null
-private var response: String = ""
-
+private var finalUrl: String = ""
 private const val url: String = "https://anwap.film"
+private const val urlPattern = "https://anwap.film/films/load/on/MTI="
 
 class MainActivity : AppCompatActivity() {
     private var filmNames: ArrayList<String> = ArrayList()
@@ -30,28 +31,29 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
         Async(url).execute()
-        listView.onItemClickListener = AdapterView.OnItemClickListener {_,_,position,_ ->
-            val newUrl = url+urls[position]
+        while(document==null){
+
+        }
+        setupListView()
+        listView.onItemClickListener = AdapterView.OnItemClickListener { _, _, position, _ ->
+            val newUrl = urlPattern + urls[position].removePrefix("/films")
             document = null
-            Async(newUrl).execute()
-            while(document==null){
+            finalUrl = ""
+            Async2(newUrl).execute()
+            while(finalUrl==""){
 
             }
-            findUrl()
+            val intent = Intent(this,ViewMovie::class.java)
+            intent.putExtra("url", finalUrl)
+            startActivity(intent)
         }
     }
 
-    private fun findUrl() {
-        //val videoURL = document!!.getElementsByClass("blms")[0]
-        val url: String = "https://anwap.film/films/load/on/MTE=/20646"
-        Async2(url).execute()
-        Log.i("response", response)
-    }
 
-    override fun onResume() {
-        setupListView()
-        super.onResume()
-    }
+//    override fun onResume() {
+//        setupListView()
+//        super.onResume()
+//    }
 
     private fun setupListView() {
         while (document == null) {
@@ -62,7 +64,7 @@ class MainActivity : AppCompatActivity() {
 
         for (i in 0 until elements.size) {
             val attr = elements[i].attr("href")
-            if(!attr.contains("films/")){
+            if (!attr.contains("films/")) {
                 filmNames.removeAt(i)
             } else urls.add(attr)
         }
@@ -82,32 +84,57 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
+fun redirect(newUrl: String): String {
+    var finalUrl = ""
+    try {
+
+        val obj = URL(newUrl)
+        val conn = obj.openConnection() as HttpURLConnection
+        conn.readTimeout = 5000
+        conn.addRequestProperty("Accept-Language", "en-US,en;q=0.8")
+        conn.addRequestProperty("User-Agent", "Mozilla")
+        conn.addRequestProperty("Referer", "google.com")
+
+        println("Request URL ... $newUrl")
+
+        var redirect = false
+
+        // normally, 3xx is redirect
+        val status = conn.responseCode
+        if (status == 200) {
+            redirect = true
+        }
+        if (status != HttpURLConnection.HTTP_OK) {
+            if (status == HttpURLConnection.HTTP_MOVED_TEMP
+                    || status == HttpURLConnection.HTTP_MOVED_PERM
+                    || status == HttpURLConnection.HTTP_SEE_OTHER)
+                redirect = true
+        }
+
+        if (redirect) {
+            finalUrl = conn.toString().removePrefix("com.android.okhttp.internal.huc.HttpURLConnectionImpl:")
+            System.out.println(finalUrl)
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
+    return finalUrl
+}
+
 internal class Async(private val url: String) : AsyncTask<Void, Void, Void>() {
     override fun doInBackground(vararg p0: Void?): Void? {
         try {
-            document = Jsoup.connect(url).get().body()
+            document = Jsoup.connect(url).followRedirects(true).get().body()
         } catch (e: Exception) {
-
+            e.printStackTrace()
         }
         return null
-    }
-
-    override fun onPostExecute(result: Void?) {
-
     }
 }
 
-internal class Async2(private val url: String) : AsyncTask<Void, Void, Void>() {
+internal class Async2(private val newUrl: String) : AsyncTask<Void, Void, Void>() {
     override fun doInBackground(vararg p0: Void?): Void? {
-        try {
-            response = Jsoup.connect(url).followRedirects(true).execute().url().toString()
-        } catch (e: Exception) {
-
-        }
+        finalUrl = redirect(newUrl)
         return null
-    }
-
-    override fun onPostExecute(result: Void?) {
-
     }
 }
