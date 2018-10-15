@@ -32,17 +32,14 @@ class FilmListAdapter(private val filmNames: List<String>,
             holder = Holder()
             holder.filmName = childView.findViewById(R.id.filmName)
             holder.url = childView.findViewById(R.id.description)
-            holder.id = childView.findViewById(R.id.id)
             holder.image = childView.findViewById(R.id.imageView)
             childView.tag = holder
 
         } else holder = childView.tag as Holder
 
-
-        holder.id.text = (position + 1).toString()
         holder.filmName.text = filmNames[position]
         holder.url.text = description[position]
-        Picasso.with(activity).load(images[position]).into(holder.image)
+        Picasso.with(activity).load(images[position]).fit().centerInside().into(holder.image)
         return childView
     }
 
@@ -60,7 +57,6 @@ class FilmListAdapter(private val filmNames: List<String>,
     }
 
     inner class Holder {
-        lateinit var id: TextView
         lateinit var filmName: TextView
         lateinit var url: TextView
         lateinit var image: ImageView
