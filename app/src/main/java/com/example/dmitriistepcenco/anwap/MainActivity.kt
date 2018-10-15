@@ -1,5 +1,6 @@
 package com.example.dmitriistepcenco.anwap
 
+import android.content.Context
 import android.content.Intent
 import android.os.AsyncTask
 import android.os.Bundle
@@ -17,6 +18,9 @@ import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import java.net.HttpURLConnection
 import java.net.URL
+import android.content.Context.INPUT_METHOD_SERVICE
+
+
 
 
 private var document: Element? = null
